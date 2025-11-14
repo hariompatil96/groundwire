@@ -1,69 +1,148 @@
-import { Avatar, Box, Grid, Typography } from '@mui/material'
-import React from 'react'
-import { ImageWrapperStyles, ImgStyles, ReportImgHeading, formatNumber } from "./common"
+"use client";
 
+import React from "react";
+import { Grid, Card, Typography, Box } from "@mui/material";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
+import PaidIcon from "@mui/icons-material/Paid";
+import ChurchIcon from "@mui/icons-material/Church";
 
-const ReportsList = ({ values, reports }) => {
-    return (
-        <Box my={4}>
-            <Grid container spacing={2} justifyContent={"space-between"}>
-                {values?.platforms?.name !== "TikTok" && <Grid item xs={12} sm={5} md={4} lg={2} sx={ImageWrapperStyles}>
-                    <Avatar src="./assets/images/reporting/spendIcon.png" alt="phone" sx={{ ...ImgStyles, ...{ "& img": { height: "60%", width: "50%", objectFit: "contain" } } }} />
-                    <Typography sx={ReportImgHeading}>
-                        ${formatNumber(reports?.spend)}
-                    </Typography>
-                    <Typography fontSize="1.2rem">
-                        Spend
-                    </Typography>
-                </Grid>}
-
-                <Grid item xs={12} sm={5} md={4} lg={2} sx={ImageWrapperStyles}>
-                    <Avatar src="./assets/images/reporting/GlobeIcon.png" alt="phone" sx={ImgStyles} />
-                    <Typography sx={ReportImgHeading}>
-                        {formatNumber(reports?.impressions)}
-                    </Typography>
-                    {/* <CountingTypography targetNumber={reports?.impressions} /> */}
-                    <Typography fontSize="1.2rem">
-                        Impressions
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} sm={5} md={4} lg={2} sx={ImageWrapperStyles}>
-
-                    <Avatar src="./assets/images/reporting/phoneIcon1.png" alt="phone" sx={{ ...ImgStyles, "& img": { height: "50%", objectFit: "contain" } }} />
-                    {/* <CountingTypography targetNumber={46723} /> */}
-                    <Typography sx={ReportImgHeading}>
-                        {formatNumber(reports?.sessions)}
-                    </Typography>
-                    <Typography fontSize="1.2rem">
-                        Views
-                    </Typography>
-                </Grid>
-                <Grid item xs={12} sm={5} md={4} lg={2} sx={{
-                    ...ImageWrapperStyles,
-                    minWidth: { xs: "auto", lg: 190 },
-                    maxWidth: { xs: "auto !important", lg: "190px !important" },
-                }}>
-                    <Avatar src="./assets/images/reporting/CrossIcon.png" alt="phone" sx={{ ...ImgStyles, ...{ "& img": { height: "70%", objectFit: "contain" } } }} />
-                    {/* <CountingTypography targetNumber={reports?.pofs}/>  */}
-                    <Typography sx={ReportImgHeading}>
-                        {formatNumber(reports?.pofs)}
-                    </Typography>
-                    <Typography fontSize="1.2rem">
-                        Professions of Faith
-                    </Typography>
-                </Grid>
-                {values?.platforms?.name !== "TikTok" && <Grid item xs={12} sm={5} md={4} lg={2} sx={ImageWrapperStyles}>
-                    <Avatar src="./assets/images/reporting/cpofIcon.png" alt="Pray" sx={{ ...ImgStyles, "& img": { height: "50%", objectFit: "contain" } }} />
-                    <Typography sx={ReportImgHeading}>
-                        ${Number(reports?.cppof)?.toFixed(2)}
-                    </Typography>
-                    <Typography fontSize="1.2rem">
-                        Cost per POF
-                    </Typography>
-                </Grid>}
-            </Grid>
-        </Box>
-    )
+interface ReportsListProps {
+  reports: any;
+  values?: any;
 }
 
-export default ReportsList
+const iconBgColors = {
+  Spend: "#DCE6FA",
+  Impressions: "#C9F0E4",
+  Views: "#E6DAFB", //
+  "Professions of Faith": "#FDE3B8",
+  "Cost per POF": "#D9FAED",
+};
+
+const iconColors = {
+  Spend: "#5276E5",
+  Impressions: "#22B07D",
+  Views: "#9D7FDA",
+  "Professions of Faith": "#F7A402",
+  "Cost per POF": "#4BCD9D",
+};
+
+const ReportsList: React.FC<ReportsListProps> = ({ reports }) => {
+  if (!reports || Object.keys(reports).length === 0) {
+    return (
+      <Typography variant="body1" sx={{ mt: 6, textAlign: "center" }}>
+        No data available.
+      </Typography>
+    );
+  }
+
+  const metrics = [
+    { label: "Spend", value: reports.spend || 0, icon: PaymentsIcon },
+    { label: "Impressions", value: reports.impressions || 0, icon: VisibilityIcon },
+    { label: "Views", value: reports.sessions || 0, icon: PlayCircleOutlineIcon },
+    { label: "Professions of Faith", value: reports.pofs || 0, icon: ChurchIcon },
+    { label: "Cost per POF", value: reports.cppof || 0, icon: PaidIcon },
+  ];
+
+  const formatValue = (label: string, value: number) => {
+    if (label === "Spend" || label === "Cost per POF") {
+      console.log(label, value);
+
+      const options =
+        label === "Spend"
+          ? { style: "currency", currency: "USD", minimumFractionDigits: 0 }
+          : { style: "currency", currency: "USD", minimumFractionDigits: 2 };
+
+      return Number(value).toLocaleString(
+        "en-US",
+        options as unknown as Intl.NumberFormatOptions
+      );
+    }
+    return value.toLocaleString();
+  }
+
+  return (
+    <Grid
+      container
+      spacing={5}
+      sx={{
+        mt: 5,
+        px: 4,
+        justifyContent: { xs: "center", md: "flex-center" },
+      }}
+    >
+      {metrics.map(({ label, value, icon: Icon }) => (
+        <Grid
+          item
+          key={label}
+          sx={{
+            width: 350,
+            height: 200,
+            display: "flex",
+          }}
+        >
+          <Card
+            elevation={1}
+            sx={{
+              width: "100%",
+              height: "100%",
+              padding: 3,
+              borderRadius: 3,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              bgcolor: "background.paper",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              "&:hover": {
+                boxShadow: 6,
+                transform: "translateY(-4px)",
+                cursor: "pointer",
+              },
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              <Typography
+                variant="h5"
+                color="text.secondary"
+                sx={{ mb: 0.5, fontWeight: 700 }}
+              >
+                {label}
+              </Typography>
+              <Typography
+                variant="h5"
+                fontWeight={700}
+                sx={{ lineHeight: 1.5 }}
+              >
+                {formatValue(label, value)}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                ml: 3,
+                backgroundColor: iconBgColors[label],
+                borderRadius: "50%",
+                width: 56,
+                height: 56,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Icon sx={{ color: iconColors[label], fontSize: 32 }} />
+            </Box>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+};
+
+export default ReportsList;

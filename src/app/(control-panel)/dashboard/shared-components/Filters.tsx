@@ -1,84 +1,51 @@
 import {
+  Divider,
   Autocomplete,
-  Button,
   Checkbox,
   Chip,
+  Button,
   CircularProgress,
-  FormControl,
   Grid,
-  InputLabel,
-  MenuItem,
   Popper,
-  Select,
+  Tab,
+  Tabs,
   TextField,
 } from "@mui/material";
 import { get } from "lodash";
 import React, { useRef, useState, useEffect } from "react";
 import { Controller } from "react-hook-form";
-import { Country, State } from "country-state-city";
-import { initialState, isEmpty } from "./common";
 import { DateRangePicker } from "react-date-range";
+import { initialState, isEmpty } from "./common";
 
-const Filters = ({ platforms, formStates, campaingData, isPending }) => {
-  const { campaignList, campaignLoading, handleCampaignChange } = campaingData;
+const Filters = ({
+  platforms,
+  formStates,
+  campaingData,
+  isPending,
+  onPlatformChange,
+}) => {
+  const { campaignList, campaignLoading } = campaingData;
   const {
     isValid,
     dirtyFields,
     errors,
-    touchedFields,
     control,
     onSubmit,
     values,
     handleSubmit,
     setValue,
   } = formStates;
+
   const popperRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedCountries, setSelectedCountries] = useState([]);
-  const [selectedStates, setSelectedStates] = useState([]);
-  const [states, setStates] = useState([]);
 
   const handleInputClick = (event) => {
     setAnchorEl(event.currentTarget);
     setOpen((prev) => !prev);
   };
 
-  const formatDate = (date) => {
-    return new Intl.DateTimeFormat("en-US").format(date);
-  };
-
-  const handleCountryChange = (event, selectedCountries) => {
-    setSelectedCountries(selectedCountries);
-
-    if (selectedCountries.length > 0) {
-      const allStates = selectedCountries
-        .map((countryName) => {
-          const country = Country.getAllCountries().find(
-            (country) => country.name === countryName
-          );
-          return country ? State.getStatesOfCountry(country.isoCode) : [];
-        })
-        .flat();
-
-      const uniqueStates = Array.from(
-        new Set(allStates.map((state) => state.name))
-      ).sort((a: any, b: any) => a.localeCompare(b));
-
-      setStates(uniqueStates);
-    } else {
-      setStates([]);
-      setSelectedStates([]);
-    }
-  };
-
-  const countries = Country.getAllCountries()
-    .map((country) => country.name)
-    .sort((a, b) => {
-      if (a === "United States") return -1;
-      if (b === "United States") return 1;
-      return a.localeCompare(b);
-    });
+  const formatDate = (date) => new Intl.DateTimeFormat("en-US").format(date);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -97,275 +64,231 @@ const Filters = ({ platforms, formStates, campaingData, isPending }) => {
     };
   }, [anchorEl]);
 
+  const tabValue =
+    values.platforms?.id || (platforms.length > 0 ? platforms[0].id : "");
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Grid container mt={3} px={2} gap={3} justifyContent={"center"}>
-        <Grid item xs={12} sm={5}>
+      <Grid container alignItems="center" spacing={2} px={2} py={1}>
+        <Grid item xs={12}>
           <Controller
             name="platforms"
             control={control}
             render={({ field }) => (
-              <Autocomplete
-                {...field}
-                options={platforms}
-                getOptionLabel={(option) => option?.name || ""}
-                isOptionEqualToValue={(option, value) =>
-                  option.id === value?.id
-                }
-                onChange={(e, value) => {
-                  field.onChange(value || null);
-                  if (value?.id === "all") {
+              <Tabs
+                value={field.value?.id || ""}
+                onChange={(e, newValue) => {
+                  const selectedPlatform =
+                    platforms.find((p) => p.id === newValue) || null;
+                  field.onChange(selectedPlatform);
+                  if (newValue === "all") {
                     setValue("campaigns", [{ id: "all", name: "All" }], {
                       shouldDirty: true,
-                      shouldValidate: true,
                     });
                   }
+                  if (onPlatformChange) {
+                    onPlatformChange(selectedPlatform);
+                  }
                 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Platform"
-                    variant="outlined"
-                    fullWidth
-                    error={!!errors?.platforms}
-                    helperText={errors?.platforms?.message}
-                    className="rs-autocomplete"
+                variant="scrollable"
+                scrollButtons="auto"
+                TabIndicatorProps={{
+                  style: {
+                    height: 3,
+                    borderRadius: 3,
+                    backgroundColor: "#1769aa",
+                  },
+                }}
+                sx={{
+                  "& .MuiTab-root": {
+                    minWidth: 70,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    fontSize: "1.2rem",
+                    color: "primary",
+                  },
+                  "& .Mui-selected": { color: "primary" },
+                  "& .MuiTabs-flexContainer": { gap: 1 },
+                }}
+              >
+                {platforms.map((platform) => (
+                  <Tab
+                    key={platform.id}
+                    label={platform.name}
+                    value={platform.id}
                   />
-                )}
-              />
+                ))}
+              </Tabs>
             )}
           />
         </Grid>
 
-        <Grid item xs={12} sm={5}>
-          <Controller
-            name="campaigns"
-            control={control}
-            render={({ field }) => (
-              <Autocomplete
-                {...field}
-                multiple
-                options={[
+        {/* Campaign + Date Picker + Button */}
+        <Grid item xs={12} container spacing={2} alignItems="center">
+          <Grid item xs={12} md={4}>
+            <Controller
+              name="campaigns"
+              control={control}
+              render={({ field }) => {
+                // compute options (ensure 'All' is first)
+                const allOptions = [
                   { id: "all", name: "All" },
                   ...get(campaignList, "result.data", []),
-                ]}
-                disableCloseOnSelect
-                getOptionLabel={(option) => option?.name || ""}
-                isOptionEqualToValue={(option, value) =>
-                  option.id === value?.id
-                }
-                value={field.value || []}
-                loading={campaignLoading}
-                loadingText="Loading..."
-                disabled={!values?.platforms?.id}
-                onChange={(event, newValue, reason, details) =>
-                  handleCampaignChange(event, newValue, reason, details)
-                }
-                sx={{
-                  "& .MuiAutocomplete-inputRoot": {
-                    flexWrap: "nowrap !important",
-                  },
-                }}
-                renderOption={(props, option, { selected }) => (
-                  <li {...props}>
-                    <Checkbox
-                      checked={
-                        selected ||
-                        field.value.some((val) => val.id === option.id)
-                      }
-                      sx={{
-                        color: selected ? "#018594" : "default",
-                        "&.Mui-checked": { color: "#018594" },
-                      }}
-                    />
-                    {option.name}
-                  </li>
-                )}
-                renderTags={(value, getTagProps) => {
-                  if (value.length > 2) {
-                    return [
-                      <Chip
-                        key="more"
-                        label={`${value.length} selected`}
-                        {...getTagProps({ index: -1 })}
-                        title={value.map((val) => val.name).join(", ")}
-                      />,
-                    ];
+                ];
+
+                const handleCampaignsChange = (
+                  event,
+                  newValue,
+                  reason,
+                  details
+                ) => {
+                  const clicked = details?.option;
+                  const allOptions = [
+                    { id: "all", name: "All" },
+                    ...get(campaignList, "result.data", []),
+                  ];
+                  const totalCampaigns = allOptions.filter(
+                    (o) => o.id !== "all"
+                  );
+                  const prev = field.value || [];
+
+                  // Defensive: if no clicked option (keyboard etc.)
+                  if (!clicked) {
+                    const filtered = (newValue || []).filter(
+                      (v) => v.id !== "all"
+                    );
+                    field.onChange(filtered);
+                    setValue("campaigns", filtered, { shouldDirty: true });
+                    return;
                   }
-                  return value.map((option, index) => (
-                    <Chip
-                      key={option.id}
-                      label={option.name}
-                      {...getTagProps({ index })}
-                    />
-                  ));
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Campaigns"
-                    variant="outlined"
-                    fullWidth
-                    error={!!errors?.campaigns}
-                    helperText={errors?.campaigns?.message}
-                    className="rs-autocomplete"
-                  />
-                )}
-                ListboxProps={{
-                  style: {
-                    maxHeight: 200,
-                    overflow: "auto",
-                  },
-                }}
-                className="rs-autocomplete"
-              />
-            )}
-          />
-        </Grid>
 
-        <Grid item xs={12} sm={5} alignSelf={"flex-start"}>
-          <FormControl fullWidth>
-            <InputLabel id="dateType-label">Filter Type</InputLabel>
-            <Controller
-              name="filterType"
-              control={control}
-              defaultValue="dateRange"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  labelId="dateType-label"
-                  label="Filter Type"
-                  onChange={(e) => {
-                    field.onChange(e.target.value);
-                    if (e.target.value === "live") {
-                      setValue("dateRange", initialState?.dateRange, {
-                        shouldValidate: true,
-                      });
+                  // Case 1: clicked "All"
+                  if (clicked.id === "all") {
+                    const selectingAll = (newValue || []).some(
+                      (v) => v.id === "all"
+                    );
+                    if (selectingAll) {
+                      field.onChange(allOptions);
+                      setValue("campaigns", allOptions, { shouldDirty: true });
+                    } else {
+                      field.onChange([]);
+                      setValue("campaigns", [], { shouldDirty: true });
                     }
-                  }}
-                >
-                  <MenuItem value="dateRange">Date Range</MenuItem>
-                  <MenuItem value="live">Live Data</MenuItem>
-                </Select>
-              )}
+                    return;
+                  }
+
+                  // Case 2: clicked a normal campaign
+                  const filtered = (newValue || []).filter(
+                    (v) => v.id !== "all"
+                  );
+
+                  // if after this, all non-All campaigns are selected → include All
+                  const allSelected = filtered.length === totalCampaigns.length;
+
+                  const finalValue = allSelected
+                    ? [...filtered, { id: "all", name: "All" }]
+                    : filtered;
+
+                  field.onChange(finalValue);
+                  setValue("campaigns", finalValue, { shouldDirty: true });
+                };
+
+                return (
+                  <Autocomplete
+                    {...field}
+                    multiple
+                    options={[
+                      { id: "all", name: "All" },
+                      ...get(campaignList, "result.data", []),
+                    ]}
+                    disableCloseOnSelect
+                    getOptionLabel={(option) => option.name || ""}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value?.id
+                    }
+                    value={field.value || []}
+                    loading={campaignLoading}
+                    disabled={!values?.platforms?.id}
+                    onChange={handleCampaignsChange}
+                    sx={{
+                      minWidth: 220,
+                      fontSize: "1.0rem",
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        height: 45,
+                      },
+                    }}
+                    renderOption={(props, option, { selected }) => (
+                      <li
+                        {...props}
+                        key={option.id}
+                        style={{ display: "flex", alignItems: "center" }}
+                      >
+                        <Checkbox
+                          checked={
+                            selected ||
+                            (Array.isArray(field.value) &&
+                              field.value.some((val) => val.id === option.id))
+                          }
+                          sx={{ "&.Mui-checked": { color: "#018594" } }}
+                        />
+                        {option.name}
+                      </li>
+                    )}
+                    renderTags={(value, getTagProps) => {
+                      if (value.length > 2) {
+                        return [
+                          <Chip
+                            key="more"
+                            label={`${value.length} selected`}
+                            title={
+                              Array.isArray(value)
+                                ? value.map((val) => val.name).join(", ")
+                                : ""
+                            }
+                          />,
+                        ];
+                      }
+                      return value.map((option, index) => (
+                        <Chip
+                          key={option.id}
+                          label={option.name}
+                          {...getTagProps({ index })}
+                        />
+                      ));
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="All Campaigns"
+                        variant="outlined"
+                      />
+                    )}
+                  />
+                );
+              }}
             />
-          </FormControl>
-        </Grid>
+          </Grid>
 
-        {/* <Grid item xs={12} sm={5}>
-                      <Autocomplete
-                          multiple
-                          options={countries}
-                          value={selectedCountries}
-                          onChange={handleCountryChange}
-                          renderInput={(params) => (
-                              <TextField {...params} label="Select Countries" variant="outlined" fullWidth />
-                          )}
-                          sx={{"& .MuiAutocomplete-inputRoot":{flexWrap:"nowrap !important"}}}
-                          renderTags={(value, getTagProps) => {
-                              return value.length > 2
-                                  ? [
-                                      <Chip
-                                          key="more"
-                                          label={`${value.length} selected`}
-                                          {...getTagProps({ index: -1 })}
-                                          title={value.join(', ')}
-                                      />,
-                                  ]
-                                  : value.map((option, index) => (
-                                      <Chip key={option} label={option} {...getTagProps({ index })} />
-                                  ));
-                          }}
-
-                          renderOption={(props, option, { selected }) => (
-                              <li {...props}>
-                                  <Checkbox
-                                      checked={selected}
-                                      sx={{
-                                          color: selected ? '#018594' : 'default',
-                                          '&.Mui-checked': {
-                                              color: '#018594',
-                                          },
-                                      }}
-                                  />
-                                  {option}
-                              </li>
-                          )}
-                          ListboxProps={{
-                              style: {
-                                  maxHeight: 200,
-                                  overflow: "auto",
-                              },
-                          }}
-                          className='rs-autocomplete'
-                          disableCloseOnSelect
-                      />
-                  </Grid>
-                  <Grid item xs={12} sm={5}>
-                      <Autocomplete
-                          multiple
-                          options={states}
-                          value={selectedStates}
-                          onChange={(event, value) => setSelectedStates(value)}
-                          renderInput={(params) => (
-                              <TextField {...params} label="Select States" variant="outlined" fullWidth />
-                          )}
-                          sx={{"& .MuiAutocomplete-inputRoot":{flexWrap:"nowrap !important"}}}
-                          renderTags={(value, getTagProps) => {
-                              return value.length > 2
-                                  ? [
-                                      <Chip
-                                          key="more"
-                                          label={`${value.length} selected`}
-                                          {...getTagProps({ index: -1 })}
-                                          title={value.join(', ')}
-                                      />,
-                                  ]
-                                  : value.map((option, index) => (
-                                      <Chip key={option} label={option} {...getTagProps({ index })} />
-                                  ));
-                          }}
-                          renderOption={(props, option, { selected }) => (
-                              <li {...props}>
-                                  <Checkbox
-                                      checked={selected}
-                                      sx={{
-                                          color: selected ? '#018594' : 'default',
-                                          '&.Mui-checked': {
-                                              color: '#018594',
-                                          },
-                                      }}
-                                  />
-                                  {option}
-                              </li>
-                          )}
-                          ListboxProps={{
-                              style: {
-                                  maxHeight: 200,
-                                  overflow: "auto",
-                              },
-                          }}
-                          className='rs-autocomplete'
-                          disableCloseOnSelect
-                      />
-                  </Grid> */}
-        {values?.filterType === "dateRange" ? (
-          <Grid item xs={12} sm={5} alignSelf={"flex-start"}>
+          <Grid item xs={12} md={4}>
             <Controller
               name="dateRange"
               control={control}
               render={({ field }) => (
                 <>
                   <TextField
-                    value={`${formatDate(field.value[0].startDate)} to ${formatDate(field.value[0].endDate)}`}
+                    value={`${formatDate(field.value[0].startDate)} - ${formatDate(field.value[0].endDate)}`}
                     onClick={handleInputClick}
-                    label="Select Date Range"
-                    fullWidth
-                    inputProps={{
-                      readOnly: true,
+                    variant="outlined"
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      width: "100%",
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        height: 45,
+                      },
                     }}
-                    error={!!errors?.dateRange}
-                    helperText={errors?.dateRange?.message}
+                    label="Date Range"
                   />
                   <Popper
                     open={open}
@@ -383,9 +306,7 @@ const Filters = ({ platforms, formStates, campaingData, isPending }) => {
                         months={2}
                         ranges={field.value}
                         direction="horizontal"
-                        preventSnapRefocus
-                        calendarFocus="backwards"
-                        rangeColors={["#018594"]}
+                        rangeColors={["#1769aa"]}
                       />
                     </div>
                   </Popper>
@@ -393,20 +314,23 @@ const Filters = ({ platforms, formStates, campaingData, isPending }) => {
               )}
             />
           </Grid>
-        ) : (
-          <Grid item xs={12} sm={5}></Grid>
-        )}
-        <Grid item xs={12} textAlign={"center"}>
-          <Button
-            variant="contained"
-            className="p-bg-color"
-            type="submit"
-            disabled={
-              isEmpty(dirtyFields) || !isValid || isPending || !isEmpty(errors)
-            }
-          >
-            {isPending ? <CircularProgress size={22} /> : "Apply Filters"}
-          </Button>
+
+          <Grid item xs={12} md="auto">
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              sx={{ height: 40, minWidth: 120, borderRadius: 2 }}
+              disabled={
+                isEmpty(dirtyFields) ||
+                !isValid ||
+                isPending ||
+                !isEmpty(errors)
+              }
+            >
+              {isPending ? <CircularProgress size={22} /> : "Apply Filters"}
+            </Button>
+          </Grid>
         </Grid>
       </Grid>
     </form>

@@ -50,7 +50,8 @@ export const themesConfig: FuseThemesType = {
 			},
 			background: {
 				paper: '#F4F4F4',
-				default: '#E8E8E8'
+				// default: '#E8E8E8'
+				default: '#F8FAFC'
 			},
 			error: {
 				light: '#FFCDD2',
