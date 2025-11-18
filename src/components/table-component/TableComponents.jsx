@@ -296,38 +296,48 @@ const TableComponent = (props) => {
     // Update the table UI
     muiSearchTextFieldProps: {
       placeholder: `Search`,
-      sx: { minWidth: '300px', minHeight:" 3rem" },
+      sx: { minWidth: '400px', minHeight:"5rem"},
       variant: 'outlined',
     },
+    
+   
+   
 
     muiTableBodyProps: {
       className: 'row-hover-shadow',
       sx: {
         '& tr > td': {
           borderBottom: '0.1rem solid #e4e4e4',
+           justifyContent: "center",
+          alignItems: "center",
           backgroundColor: '#fff',
+          fontSize:"18px",
         }
       },
     },
+
 
     muiTableHeadProps: {
       sx: {
         '& tr > th': {
           borderTop: '0.1rem solid #e4e4e4',
           borderBottom: '0.1rem solid #e4e4e4',
-          backgroundColor: '#fff',
+          backgroundColor: '#FF0000',
           paddingBottom: "10px",
+          fontSize:"20px",
         },
         '& tr > th > .Mui-TableHeadCell-Content > .Mui-TableHeadCell-Content-Labels': {
           width: "100%",
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize:"20px",
         },
         '& tr > th > .Mui-TableHeadCell-Content > .Mui-TableHeadCell-Content-Actions > button': {
           width: "auto",
           height: "auto",
-          background: 'none'
+          background: 'none',
+          fontSize:"20px",
         },
         '& tr > th > .Mui-TableHeadCell-Content > .Mui-TableHeadCell-ResizeHandle-Wrapper': {
           position: 'static',

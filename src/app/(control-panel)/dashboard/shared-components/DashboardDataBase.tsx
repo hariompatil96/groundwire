@@ -14,7 +14,6 @@ import ReportsList from './ReportsList';
 import Filters from './Filters';
 import LiveDataList from './LiveDataList';
 import dayjs from "dayjs";
-import { Refresh, WarningAmber } from '@mui/icons-material';
 
 
 function DashboardDataBase() {
@@ -32,6 +31,7 @@ function DashboardDataBase() {
     handleSubmit,
     watch,
     formState,
+    getValues,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: initialState,
@@ -85,13 +85,24 @@ function DashboardDataBase() {
       }
       dirtyFields.platforms = true;
     }
+  }, [platformList])
+
+  
+  useEffect(() => {
     if (campaignList) {
       setCampaigns(() => [{ id: "all", name: "All" }, ...get(campaignList, "result.data", [])]);
       const allCampaigns = [{ id: "all", name: "All" }, ...get(campaignList, "result.data", [])]?.map((campaign) => campaign);
       setValue("campaigns", allCampaigns, { shouldDirty: true, shouldValidate: true })
       dirtyFields.campaigns = true;
+      
+      
+      if (values?.platforms?.id) {
+        setTimeout(() => {
+          onSubmit(getValues());
+        }, 100);
+      }
     }
-  }, [platformList, campaignList])
+  }, [campaignList])
 
   const handleCampaignChange = (event, selectedCampaigns) => {
     const isAllSelected = selectedCampaigns.some((campaign) => campaign.id === "all");
@@ -182,6 +193,11 @@ function DashboardDataBase() {
     setLiveReports([]);
   }, [values?.platforms])
 
+  
+  const handlePlatformChange = () => {
+    
+  };
+
   const hasData = liveDataList && Object.keys(liveDataList).length > 0;
 
   return (
@@ -204,87 +220,15 @@ function DashboardDataBase() {
         }}
         platforms={platforms}
         isPending={values?.filterType !== "dateRange" ? loading : isPending}
+        onPlatformChange={handlePlatformChange}
       />
 
       {submitError || reportError ?
         <Box className="text-xl font-bold text-center mt-24 mx-4 h-[180px]">No data found for the specified dates.</Box>
         : values?.filterType === "dateRange" ? <ReportsList values={values} reports={reports} /> : <LiveDataList values={values} reports={liveReports} platforms={values?.platforms} />
       }
-      <Divider />
-      <div className="p-4 mt-4">
-        {/* Header */}
-        <div className="flex gap-8 items-center mb-4">
-          <Typography variant="h6" className="font-semibold">Real-Time Data</Typography>
-          <Button
-            variant="contained"
-            className="p-bg-color"
-            onClick={() => refetch({ force: true })}
-            disabled={isLiveLoading || isRefetching || hasData}
-            startIcon={<Refresh />}
-          >
-            {isLiveLoading || isRefetching ? <CircularProgress size={22} color="inherit" /> : "Refresh"}
-          </Button>
-        </div>
-        <Alert severity="warning" className='w-fit p-0 mb-2 bg-transparent'><strong>Note:</strong> Data updates are limited. Avoid frequent clicks to prevent API restrictions.</Alert>
-
-        {isLiveLoading || isRefetching && (
-          <div className="flex justify-center my-6">
-            <CircularProgress />
-          </div>
-        )}
-
-        {liveError && !isLiveLoading && !isRefetching && (
-          <Typography className="text-red-500 text-center mt-4">
-            Error fetching live data. Please try again.
-          </Typography>
-        )}
-
-        {!isLiveLoading && !liveError && !hasData && !isRefetching && (
-          <Typography className="text-gray-500 text-center mt-4">
-            No live data available.
-          </Typography>
-        )}
-
-        {!isLiveLoading && !liveError && hasData && !isRefetching && (
-          <Box my={4}>
-            <TableContainer component={Paper}>
-              <Table
-                sx={{
-                  minWidth: 650,
-                  border: "1px solid #ccc",
-                  "& .MuiTableCell-root": { border: "1px solid #ccc" }
-                }}
-                aria-label="live data table"
-              >
-                <TableHead>
-                  {/* <TableRow>
-                    <TableCell className="font-bold bg-gray-100">Key Name</TableCell>
-                    <TableCell className="font-bold bg-gray-100">Value</TableCell>
-                  </TableRow> */}
-                </TableHead>
-                <TableBody>
-                  {Object.entries(liveDataList)?.map(([key, value]) => (
-                    <TableRow key={key}>
-                      <TableCell className="font-bold">{key}</TableCell>
-                      <TableCell>
-                        {Array.isArray(value) ? (
-                          <ul className="list-disc pl-4">
-                            {value.map((item, index) => (
-                              <li key={index}>{item}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          value
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        )}
-      </div>
+      
+    
     </div>
   );
 }
