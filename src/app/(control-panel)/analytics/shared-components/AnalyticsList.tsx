@@ -62,7 +62,7 @@ const AnalyticsList = () => {
 
     return (
         <Grid container rowGap={3} columnSpacing={2}>
-            <Grid item xs={12}>
+            <Grid item xs={12} className='p-20 md:p-80 md:pt-8 md:rounded-2xl'>
                 <TableComponent
                     slug="analytic"
                     querykey="get-analytic"
@@ -79,7 +79,7 @@ const AnalyticsList = () => {
                         [
                             {
                                 accessorKey: 'analyticName',
-                                header: 'Analytic Name',
+                                header: 'Name',
                             },
                             {
                                 accessorKey: 'id',
@@ -91,7 +91,7 @@ const AnalyticsList = () => {
                                             sx={{
                                                 display: "flex",
                                                 alignItems: "center",
-                                                gap: "0.5rem",
+                                                // gap: "0.5rem",
                                                 cursor: "pointer",
                                             }}
                                             title="Copy form Url"
@@ -100,7 +100,7 @@ const AnalyticsList = () => {
                                         }}>
                                             {analyticUrl}
                                             <FuseSvgIcon sx={{
-                                                fontSize: "1rem",
+                                                fontSize: "1.5rem",
                                             }} className="copy-icon">material-outline:content_copy</FuseSvgIcon>
                                         </Typography>
                                     );

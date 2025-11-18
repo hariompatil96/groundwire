@@ -79,7 +79,7 @@ function renderInputComponent(props: RenderInputComponentProps) {
 							},
 							classes: {
 								input: 'FuseSearch-input py-0 px-16 h-36 md:h-36 ltr:pr-36 rtl:pl-36',
-								notchedOutline: 'rounded-lg'
+								notchedOutline: 'rounded-5xl'
 							}
 						}}
 						variant="outlined"

@@ -4,6 +4,7 @@ import React from 'react';
 import DashboardDataBase from './shared-components/DashboardDataBase';
 import DashboardSheet from './shared-components/DashboardSheet';
 import { Box, Tab, Tabs } from '@mui/material';
+import LightDarkModeToggle from '@/components/LightDarkModeToggle';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -56,6 +57,8 @@ function Dashboard() {
         <CustomTabPanel value={value} index={1}>
           <DashboardSheet />
         </CustomTabPanel> */}
+
+        {/* <LightDarkModeToggle /> */}
         <DashboardDataBase />
       </Box>
     </div>

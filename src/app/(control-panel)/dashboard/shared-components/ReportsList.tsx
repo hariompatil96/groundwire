@@ -40,9 +40,21 @@ const ReportsList: React.FC<ReportsListProps> = ({ reports }) => {
 
   const metrics = [
     { label: "Spend", value: reports.spend || 0, icon: PaymentsIcon },
-    { label: "Impressions", value: reports.impressions || 0, icon: VisibilityIcon },
-    { label: "Views", value: reports.sessions || 0, icon: PlayCircleOutlineIcon },
-    { label: "Professions of Faith", value: reports.pofs || 0, icon: ChurchIcon },
+    {
+      label: "Impressions",
+      value: reports.impressions || 0,
+      icon: VisibilityIcon,
+    },
+    {
+      label: "Views",
+      value: reports.sessions || 0,
+      icon: PlayCircleOutlineIcon,
+    },
+    {
+      label: "Professions of Faith",
+      value: reports.pofs || 0,
+      icon: ChurchIcon,
+    },
     { label: "Cost per POF", value: reports.cppof || 0, icon: PaidIcon },
   ];
 
@@ -61,7 +73,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ reports }) => {
       );
     }
     return value.toLocaleString();
-  }
+  };
 
   return (
     <Grid
@@ -85,7 +97,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ reports }) => {
         >
           <Card
             elevation={1}
-            sx={{
+            sx={(theme) => ({
               width: "100%",
               height: "100%",
               padding: 3,
@@ -95,12 +107,27 @@ const ReportsList: React.FC<ReportsListProps> = ({ reports }) => {
               justifyContent: "space-between",
               bgcolor: "background.paper",
               boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+              transition: "0.25s ease",
+
+              // HOVER CUSTOMIZED FOR LIGHT & DARK
               "&:hover": {
-                boxShadow: 6,
                 transform: "translateY(-4px)",
+
+                // Different hover effects depending on theme mode
+                ...(theme.palette.mode === "dark"
+                  ? {
+                      boxShadow: "0 0 12px rgba(0, 255, 200, 0.25)",
+                      border: "1px solid rgba(0, 255, 200, 0.40)",
+                      backgroundColor: "rgba(255,255,255,0.03)",
+                    }
+                  : {
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                      border: "1px solid rgba(0,0,0,0.12)",
+                      backgroundColor: "#ffffff",
+                    }),
                 cursor: "pointer",
               },
-            }}
+            })}
           >
             <Box
               sx={{

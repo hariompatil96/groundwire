@@ -64,7 +64,7 @@ export const themesConfig: FuseThemesType = {
 	defaultDark: {
 		palette: {
 			mode: 'dark',
-			divider: 'rgba(79,79,79,0.5)',
+			// divider: 'rgba(79,79,79,0.5)',
 			text: {
 				primary: '#E0E0E0',
 				secondary: '#B0BEC5'
@@ -86,8 +86,8 @@ export const themesConfig: FuseThemesType = {
 				contrastText: '#FFFFFF'
 			},
 			background: {
-				paper: '#1E1E1E',
-				default: '#121212'
+				paper: '#000000',
+				default: '#020617'
 			},
 			error: {
 				light: '#FFCDD2',
